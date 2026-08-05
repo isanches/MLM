@@ -2,6 +2,10 @@
 
 A didactic implementation of a statistical language model in C.
 
+> 🚧 This project is under active development.
+
+Current version: **0.1.0**
+
 ## Features
 
 - Read text files
@@ -12,22 +16,24 @@ A didactic implementation of a statistical language model in C.
 
 ## Build
 
-make
+$ make
 
 ## Run
 
-./mlm training.txt
+$ ./bin/mlm
 
 ## Documentation
 
 See docs/
 
-# Status
+## Status
 
 - [x] Project structure
-- [ ] Vocabulary
-- [ ] Text processing
-- [ ] Bigram model
-- [ ] Generator
+- [x] Vocabulary
+- [x] Text normalization
+- [x] Tokenizer
+- [x] Bigram model
+- [x] Text generator
 - [ ] Statistics
+- [ ] Tests
 - [ ] Documentation
