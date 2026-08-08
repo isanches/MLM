@@ -199,7 +199,8 @@ static int is_delimiter(char c)
     {
         case ' ':
         case '\t':
-        case '\n':
+        case '\n':  // fim de linha Unix, Linux, Mac (LF) \n
+        case '\r':  // fim de linha Windows (CRLF) \r\n
         case '.':
         case ',':
         case ';':
@@ -209,6 +210,19 @@ static int is_delimiter(char c)
         case '(':
         case ')':
         case '"':
+        case '*':
+        case '+':
+        case '_':
+        case '-':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '&':
+        case '$':
+        case '#':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
         case '\'':
             return 1;
 
@@ -221,24 +235,32 @@ static int is_delimiter(char c)
  * Tokenização
  * ================================================================ */
 
+static void process_word(MLM *mlm,
+                         char *word,
+                         int index)
+{
+    word[index] = '\0';
+
+    normalize_word(word);
+
+    if (mlm->tokens.size >= MAX_TOKENS)
+    {
+        fprintf(stderr,
+                "Número máximo de tokens excedido.\n");
+
+        exit(EXIT_FAILURE);
+    }
+
+    mlm->tokens.ids[mlm->tokens.size++] =
+        vocabulary_get_id(&mlm->vocabulary,
+                          word);
+}
+
 /*
  * Lê o corpus e gera:
  *
  * - vocabulário
  * - sequência de IDs
- *
- *   TODO:
- *   Criar:
- *
- *   static void process_word(...)
- *
- *   para evitar a repetição:
- *
-        word[index] = '\0';
-        normalize_word(word);
-
-        mlm->tokens.ids[mlm->tokens.size++] =
-            vocabulary_get_id(...);
  *
  */
 void tokenize(MLM *mlm,
@@ -277,21 +299,7 @@ void tokenize(MLM *mlm,
             {
                 if (index > 0)
                 {
-                    word[index] = '\0';
-
-                    normalize_word(word);
-
-                    if (mlm->tokens.size >= MAX_TOKENS)
-                    {
-                        fprintf(stderr,
-                                "Número máximo de tokens excedido.\n");
-
-                        exit(EXIT_FAILURE);
-                    }
-
-                    mlm->tokens.ids[mlm->tokens.size++] =
-                        vocabulary_get_id(&mlm->vocabulary,
-                                          word);
+                    process_word(mlm, word, index);
                 }
 
                 break;
@@ -301,22 +309,7 @@ void tokenize(MLM *mlm,
             {
                 if (index > 0)
                 {
-                    word[index] = '\0';
-
-                    normalize_word(word);
-
-                    if (mlm->tokens.size >= MAX_TOKENS)
-                    {
-                        fprintf(stderr,
-                                "Número máximo de tokens excedido.\n");
-
-                        exit(EXIT_FAILURE);
-                    }
-
-                    mlm->tokens.ids[mlm->tokens.size++] =
-                        vocabulary_get_id(&mlm->vocabulary,
-                                          word);
-
+                    process_word(mlm, word, index);
                     index = 0;
                 }
             }
@@ -642,6 +635,7 @@ void print_model_summary(const MLM *mlm)
 int main(void)
 {
     MLM mlm;
+    char corpus[MAX_LINE_LENGTH];
 
     printf("\nMLM, version %d.%d.%d\n\n",
            MLM_VERSION_MAJOR,
@@ -656,7 +650,9 @@ int main(void)
 
     /* Construção do modelo */
 
-    tokenize(&mlm, "tests/corpus.txt");
+    printf("Corpus file name: ");
+    gets(corpus);
+    tokenize(&mlm, corpus);
 
     train_bigram_model(&mlm);
 
@@ -670,9 +666,11 @@ int main(void)
 
     /* Geração */
 
-    generate_text(&mlm,
-                  -1,
-                  30);
+    for(int i = 1; i <= 10; i++)
+    {
+        printf("%2d:", i);
+        generate_text(&mlm, -1, 30);
+    }
 
     return EXIT_SUCCESS;
 }
